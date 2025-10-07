@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "llmsays"
+version = "0.1.0"
+description = "One-line local LLM queries with smart routing"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "semantic-router[hybrid]>=0.5.0",
+    "sentence-transformers>=2.2.0",
+    "llama-cpp-python>=0.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+llmsays = "llmsays.cli:main"  # Optional CLI
+
+[project.urls]
+Homepage = "https://github.com/[yourusername]/llmsays"
