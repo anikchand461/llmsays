@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     package_dir={"": "src"},
     packages=find_packages(where="src"),
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     install_requires=[
         "openai>=1.40.0",
         "semantic-router[hybrid]>=0.0.50",
