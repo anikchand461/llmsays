@@ -67,3 +67,14 @@ def cli():
     parser = argparse.ArgumentParser(
         description="llmsays: One-line LLM queries via OpenRouter."
     )
+    parser.add_argument("query", help="The prompt/query for the LLM.")
+    parser.add_argument(
+        "--max-tokens", type=int, default=256, help="Max output tokens (default: 256)."
+    )
+    args = parser.parse_args()
+
+    print(llmsays(args.query, args.max_tokens))
+
+
+if __name__ == "__main__":
+    cli()

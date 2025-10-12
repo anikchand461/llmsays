@@ -14,6 +14,4 @@ if __name__ == "__main__":
     print("Simple:", llmsays("What is 2+2?"))
     print("Complex:", llmsays("Solve dy/dx = x^2 + y^2"))
     print("Creative:", llmsays("Write a short poem about stars"))
-    print(
-        "Tool-Use:", llmsays("Write Python code for Fibonacci sequence")
-    )
+    print("Tool-Use:", llmsays("Write Python code for Fibonacci sequence"))

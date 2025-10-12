@@ -4,8 +4,9 @@ Router module: Hybrid (heuristic + semantic) categorization for prompts.
 
 import re
 from functools import lru_cache
-from semantic_router import Route, HybridRouteLayer
-from semantic_router.encoders import HuggingFaceEncoder, BM25Encoder
+
+from semantic_router import HybridRouteLayer, Route
+from semantic_router.encoders import BM25Encoder, HuggingFaceEncoder
 
 # Compact routes
 routes = [
@@ -16,28 +17,46 @@ routes = [
     ),
     Route(
         name="moderate",
-        utterances=["Explain car engine", "Translate to Spanish", "Short Python sort"],
+        utterances=[
+            "Explain car engine",
+            "Translate to Spanish",
+            "Short Python sort",
+        ],
         keywords=["explain", "translate", "script"],
     ),
     Route(
         name="complex",
-        utterances=["Solve differential equation", "Quantum entanglement math", "Analyze contract"],
+        utterances=[
+            "Solve differential equation",
+            "Quantum entanglement math",
+            "Analyze contract",
+        ],
         keywords=["solve", "equation", "analyze"],
     ),
     Route(
         name="creative",
-        utterances=["Write poem ocean", "Funny robot dialogue", "App slogan"],
+        utterances=[
+            "Write poem ocean",
+            "Funny robot dialogue",
+            "App slogan",
+        ],
         keywords=["poem", "dialogue", "slogan"],
     ),
     Route(
         name="tool-use",
-        utterances=["Python Fibonacci", "Weather API query", "JSON dataset analyze"],
+        utterances=[
+            "Python Fibonacci",
+            "Weather API query",
+            "JSON dataset analyze",
+        ],
         keywords=["python", "api", "data"],
     ),
 ]
 
 # Encoders
-dense_encoder = HuggingFaceEncoder("sentence-transformers/paraphrase-MiniLM-L3-v2")
+dense_encoder = HuggingFaceEncoder(
+    "sentence-transformers/paraphrase-MiniLM-L3-v2"
+)
 sparse_encoder = BM25Encoder()
 
 # Hybrid router
@@ -48,7 +67,6 @@ router = HybridRouteLayer(
     alpha=0.6,
     aggregation="cosine",
 )
-
 
 # Cached route
 @lru_cache(maxsize=128)
@@ -62,7 +80,9 @@ def _cached_route(query: str) -> str:
 def heuristic_pre_filter(query: str) -> str | None:
     tokens = len(query.split())
     q_lower = query.lower()
-    complex_re = re.compile(r"(solve|explain|write|analyze|python|equation|poem|api)")
+    complex_re = re.compile(
+        r"(solve|explain|write|analyze|python|equation|poem|api)"
+    )
     if tokens < 10 and not complex_re.search(q_lower):
         return "simple"
     if tokens > 100 and "math|code|analyze" in q_lower:
@@ -72,6 +92,7 @@ def heuristic_pre_filter(query: str) -> str | None:
     if any(kw in q_lower for kw in ["poem", "story", "dialogue"]):
         return "creative"
     return None
+
 
 def get_category(query: str) -> str:
     """Get category via hybrid routing."""

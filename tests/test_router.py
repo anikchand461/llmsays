@@ -6,7 +6,7 @@ from llmsays.router import get_category, heuristic_pre_filter
 @pytest.fixture
 def sample_queries():
     return {
-        "simple": "deviation is 2+2?",
+        "simple": "What is 2+2?",
         "moderate": "Explain car engine",
         "complex": "Solve dy/dx = x^2 + y^2",
         "creative": "Write a poem about ocean",
@@ -21,10 +21,10 @@ def test_heuristic_pre_filter(sample_queries):
 
 
 def test_get_category(sample_queries):
-    assert get_category(sample_queries)["simple"] == "simple"
-    assert get_category(sample_queries)["complex"] == "complex"
-    # Note: Semantic may vary; mock embeddings in CI if flaky
+    assert get_category(sample_queries["simple"]) == "simple"
+    assert get_category(sample_queries["complex"]) == "complex"
+    # Note: Semantic tests may vary due to embeddings; mock if needed for CI
 
 
 def test_fallback_category():
-    assert get_category("Random unrelated query") == "moderate"
+    assert get_category("Random unrelated query") == "moderate"  # Fallback
