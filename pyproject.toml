@@ -1,58 +1,27 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "llmsays"
-dynamic = ["version"]  # Pull version from git or file
-description = "One-line LLM queries with smart hybrid routing via OpenRouter (free models)."
+version = "0.1.0"
+description = "One-line LLM queries via OpenRouter"
 authors = [{name = "Your Name", email = "your@email.com"}]
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.10"
-keywords = ["llm", "openrouter", "routing", "ai"]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Intended Audience :: Developers",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence"
-]
+requires-python = ">=3.9"
 dependencies = [
-    "openai",
-    "semantic-router[hybrid]",
-    "sentence-transformers",
-    "pytest"
+    "openai>=1.40.0",
+    "semantic-router[hybrid]>=0.0.50",
+    "sentence-transformers>=3.0.0"
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "black>=24.0",
-    "flake8>=7.0",
-    "build>=1.0",
-    "twine>=5.0"
-]
+dev = ["pytest>=8.0", "black>=24.0"]
 test = ["pytest>=8.0", "pytest-mock>=3.0"]
 
-[project.urls]
-Homepage = "https://github.com/anikchand461/llmsays"
-Repository = "https://github.com/anikchand461/llmsays"
-Documentation = "https://github.com/anikchand461/llmsays/blob/main/docs/installation.md"
-
 [project.scripts]
-llmsays = "llmsays:cli"  # CLI entry point
+llmsays = "llmsays:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.setuptools_scm]
-write_to = "src/llmsays/_version.py"
-
-[tool.black]
-line-length = 88
-target-version = ['py39']
-include = '\.pyi?$'
