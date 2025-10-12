@@ -4,6 +4,7 @@ Router: Hybrid categorization for prompts.
 
 import re
 from functools import lru_cache
+from typing import Optional
 from semantic_router import Route, HybridRouteLayer
 from semantic_router.encoders import HuggingFaceEncoder, BM25Encoder
 
@@ -25,7 +26,7 @@ def _cached_route(query: str) -> str:
     threshold = 0.6 + 0.2 * (len(query.split()) > 50)
     return choice.name if choice.similarity_score >= threshold else "moderate"
 
-def heuristic_pre_filter(query: str) -> str | None:
+def heuristic_pre_filter(query: str) -> Optional[str]:
     tokens = len(query.split())
     q_lower = query.lower()
     complex_re = re.compile(r"(solve|explain|write|analyze|python|equation|poem|api)")
