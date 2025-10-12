@@ -39,9 +39,9 @@ dev = [
 test = ["pytest>=8.0", "pytest-mock>=3.0"]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/llmsays"
-Repository = "https://github.com/yourusername/llmsays"
-Documentation = "https://github.com/yourusername/llmsays/blob/main/docs/installation.md"
+Homepage = "https://github.com/anikchand461/llmsays"
+Repository = "https://github.com/anikchand461/llmsays"
+Documentation = "https://github.com/anikchand461/llmsays/blob/main/docs/installation.md"
 
 [project.scripts]
 llmsays = "llmsays:cli"  # CLI entry point

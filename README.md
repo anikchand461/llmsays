@@ -1,7 +1,7 @@
 # llmsays: One-Line Local LLM Queries with Smart Routing
 
 [![PyPI version](https://badge.fury.io/py/llmsays.svg)](https://badge.fury.io/py/llmsays)
-[![Tests](https://github.com/[yourusername]/llmsays/actions/workflows/test.yml/badge.svg)](https://github.com/[yourusername]/llmsays/actions)
+[![Tests](https://github.com/[anikchand461]/llmsays/actions/workflows/test.yml/badge.svg)](https://github.com/[anikchand461]/llmsays/actions)
 
 A lightweight Python package for querying open-source LLMs with a single function call: `llmsays("Your prompt")`. It auto-routes prompts to the best local model based on complexity (e.g., Phi-3-mini for simple, Llama-3-70B for complex) using a hybrid heuristic + semantic router. Zero cost, fully local, and blazing-fast (<100ms routing).
 
