@@ -1,15 +1,16 @@
+#!/usr/bin/env python3
 """
-Quick start example for llmsays.
+Quick start: Run `python examples/quick-start.py` after setting OPENROUTER_API_KEY.
 """
 
+import os
 from llmsays import llmsays
 
+# Set your key (or export OPENROUTER_API_KEY=sk-or-...)
+os.environ["OPENROUTER_API_KEY"] = "your_key_here"  # Replace
+
 if __name__ == "__main__":
-    # Simple query (routes to Phi-3-mini)
     print("Simple:", llmsays("What is 2+2?"))
-    
-    # Complex query (routes to Llama-3-70B)
     print("Complex:", llmsays("Solve dy/dx = x^2 + y^2"))
-    
-    # Creative query (routes to Qwen2-14B)
-    print("Creative:", llmsays("Write a poem about stars"))
+    print("Creative:", llmsays("Write a short poem about stars"))
+    print("Tool-Use:", llmsays("Write Python code for Fibonacci sequence"))

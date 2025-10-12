@@ -1,9 +1,5 @@
-# Installation Guide
+# Installation
 
-## Prerequisites
-- Python 3.9+
-- GPU recommended for speed (CUDA for llama-cpp-python).
-
-## Step 1: Install Package
-```bash
-pip install llmsays
+1. pip install llmsays
+2. Set OPENROUTER_API_KEY env var.
+3. Run: python -m llmsays "Your query"

@@ -1,33 +1,53 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "llmsays"
-version = "0.1.0"
-description = "One-line local LLM queries with smart routing"
+dynamic = ["version"]  # Pull version from git or file
+description = "One-line LLM queries with smart hybrid routing via OpenRouter (free models)."
+authors = [{name = "Your Name", email = "your@email.com"}]
+license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
+keywords = ["llm", "openrouter", "routing", "ai"]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
 dependencies = [
-    "semantic-router[hybrid]>=0.1.0",
-    "sentence-transformers>=2.2.0",
-    "llama-cpp-python>=0.2.0",
-    "huggingface-hub>=0.20.0",
+    "openai",
+    "semantic-router[hybrid]",
+    "sentence-transformers",
+    "pytest"
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
+    "pytest>=8.0",
+    "black>=24.0",
+    "flake8>=7.0",
+    "build>=1.0",
+    "twine>=5.0"
 ]
-
-[project.scripts]
-llmsays = "llmsays.cli:main"  # Optional CLI
+test = ["pytest>=8.0", "pytest-mock>=3.0"]
 
 [project.urls]
-Homepage = "https://github.com/[yourusername]/llmsays"
+Homepage = "https://github.com/yourusername/llmsays"
+Repository = "https://github.com/yourusername/llmsays"
+Documentation = "https://github.com/yourusername/llmsays/blob/main/docs/installation.md"
+
+[project.scripts]
+llmsays = "llmsays:cli"  # CLI entry point
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+write_to = "src/llmsays/_version.py"

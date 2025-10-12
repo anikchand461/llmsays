@@ -1,21 +1,25 @@
-"""
-Basic tests for llmsays router.
-"""
-
 import pytest
-from llmsays import llmsays
+from llmsays.router import get_category, heuristic_pre_filter
 
-def test_llmsays_simple():
-    """Test simple prompt routes correctly."""
-    response = llmsays("What is 2+2?")
-    assert len(response) > 0  # Basic check; expand with mocks if needed
+@pytest.fixture
+def sample_queries():
+    return {
+        "simple": "What is 2+2?",
+        "moderate": "Explain car engine",
+        "complex": "Solve dy/dx = x^2 + y^2",
+        "creative": "Write a poem about ocean",
+        "tool-use": "Python Fibonacci up to 100"
+    }
 
-def test_llmsays_complex():
-    """Test complex prompt."""
-    response = llmsays("Solve dy/dx = x^2 + y^2")
-    assert "solution" in response.lower() or "integral" in response.lower()  # Loose check
+def test_heuristic_pre_filter(sample_queries):
+    assert heuristic_pre_filter(sample_queries["simple"]) == "simple"
+    assert heuristic_pre_filter(sample_queries["tool-use"]) == "tool-use"
+    assert heuristic_pre_filter("Hello world") == "simple"  # Short, no complex keywords
 
-def test_llmsays_edge_case():
-    """Test empty/edge prompt."""
-    response = llmsays("Hello")
-    assert len(response) > 0
+def test_get_category(sample_queries):
+    assert get_category(sample_queries["simple"]) == "simple"
+    assert get_category(sample_queries["complex"]) == "complex"
+    # Note: Semantic tests may vary slightly due to embeddings; mock if needed for CI
+
+def test_fallback_category():
+    assert get_category("Random unrelated query") == "moderate"  # Fallback

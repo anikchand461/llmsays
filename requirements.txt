@@ -1,5 +1,5 @@
-semantic-router[hybrid]>=0.1.0
-sentence-transformers>=2.2.0
-llama-cpp-python>=0.2.0
-huggingface-hub>=0.20.0  # For model downloads
+semantic-router[hybrid]
+sentence-transformers
+huggingface-hub
 pytest
+openai
