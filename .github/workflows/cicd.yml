@@ -1,166 +1,107 @@
 # .github/workflows/cicd.yml
-# Comprehensive CI/CD for llmsays: Build, Test, Package, Dockerize, and Publish
+# Simplified CI/CD for llmsays: Lint, Test, Build, Dockerize, and Publish
+# Focus: Essential jobs only (removed heavy coverage/Codecov, reduced matrix, optional changelog)
 # Triggers: push (main), pull_request, release (tagged)
-# Secrets needed (GitHub repo settings):
-# - PYPI_API_TOKEN: PyPI token for publishing
-# - DOCKERHUB_USERNAME: Docker Hub username
-# - DOCKERHUB_TOKEN: Docker Hub token
-# - OPENROUTER_API_KEY: For integration tests (optional, mocked in unit tests)
+# Secrets needed:
+# - PYPI_API_TOKEN: PyPI token
+# - DOCKERHUB_USERNAME & DOCKERHUB_TOKEN: Docker Hub
+# - OPENROUTER_API_KEY: For Docker test (mocked in unit tests)
 
 name: CI/CD Pipeline
 
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*.*.*' ]  # Triggers release on tags like v0.1.0
+    tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
 
 jobs:
-  # Job 1: Lint and Format Check (Code Quality)
+  # Job 1: Lint and Format
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: pip install black flake8
+      - run: black --check src/ tests/ examples/
+      - run: flake8 src/ tests/ examples/ --max-complexity=10 --max-line-length=88
 
-      - name: Install lint deps
-        run: |
-          pip install black flake8
-
-      - name: Run Black (format check)
-        run: |
-          black --check src/ tests/ examples/
-
-      - name: Run Flake8 (lint)
-        run: |
-          flake8 src/ tests/ examples/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 src/ tests/ examples/ --count --max-complexity=10 --max-line-length=88 --statistics
-
-  # Job 2: Unit and Integration Tests
+  # Job 2: Tests (single version, no coverage upload)
   test:
-    needs: lint  # Run after lint passes
+    needs: lint
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.10', '3.11', '3.12']  # Multi-version testing
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install deps
-        run: |
-          pip install -e .[dev,test]
-          pip install pytest pytest-mock
-
-      - name: Run tests with coverage
+          python-version: '3.12'  # Single version for speed
+      - run: pip install -e .[dev,test] pytest pytest-mock
+      - run: pytest tests/  # Basic run, no cov XML/upload
         env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}  # Mocked in tests; real for integration if needed
-        run: |
-          pytest tests/ --cov=src/llmsays --cov-report=xml
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
 
-      - name: Upload coverage to Codecov (optional, add CODECOV_TOKEN secret)
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage.xml
-        if: success()
-
-  # Job 3: Build Package (Wheel + Sdist)
+  # Job 3: Build Package
   build-package:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # For version tagging
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Install build tools
-        run: |
-          pip install build twine
-
-      - name: Build package
-        run: |
-          python -m build --sdist --wheel --outdir dist/
-
-      - name: Check package
-        run: |
-          twine check dist/*
-
-      - name: Upload artifact (wheels/sdists)
-        uses: actions/upload-artifact@v4
+      - run: pip install build twine
+      - run: python -m build --sdist --wheel --outdir dist/
+      - run: twine check dist/*
+      - uses: actions/upload-artifact@v4
         with:
           name: package-dist
           path: dist/
 
-  # Job 4: Publish to PyPI (on tag/release)
+  # Job 4: Publish to PyPI (on tag)
   publish-pypi:
     needs: build-package
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')  # Only on version tags
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: package-dist
           path: dist/
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: dist/
-          skip-existing: true  # Avoid duplicates
+          skip-existing: true
 
-  # Job 5: Build and Push Docker Image
+  # Job 5: Build and Push Docker (includes basic test)
   docker:
-    needs: test  # After tests pass
+    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels)
-        id: meta
+      - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: yourdockerhubusername/llmsays  # Replace with your Docker Hub repo
+          images: yourdockerhubusername/llmsays
           tags: |
             type=ref,event=branch
-            type=ref,event=pr
             type=semver,pattern={{version}}
             type=sha
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6
         with:
           context: .
           push: true
@@ -168,33 +109,25 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=yourdockerhubusername/llmsays:buildcache
           cache-to: type=registry,ref=yourdockerhubusername/llmsays:buildcache,mode=max
+      - run: |
+          docker run --rm -e OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }} yourdockerhubusername/llmsays:latest "What is 2+2?" || echo "Test skipped (key issue)"
 
-      - name: Test Docker image
-        run: |
-          docker run --rm -e OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }} yourdockerhubusername/llmsays:latest "What is 2+2?" || echo "Docker test failed (expected if no key)"
-
-  # Job 6: Release Notes (on tag)
+  # Job 6: Release (lightweight, no changelog gen)
   release:
     needs: [publish-pypi, docker]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
-      contents: write  # For creating release
+      contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Generate changelog
-        uses: jaywcjlove/changelog-generator@v1.5.0
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          head-ref: ${{ github.ref }}
-          filter-author: (github-actions|dependabot)
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+          name: package-dist
+          path: dist/
+      - uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-          body_path: CHANGELOG.md
+          body: "Automated release for tag ${{ github.ref }}. See artifacts."
           draft: false
           prerelease: false
