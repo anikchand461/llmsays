@@ -12,7 +12,7 @@ authors = [
     { name = "Rudra Bhowmick", email = "bhowmickrudra07@gmail.com" }
 ]
 license = {file = "LICENSE"}
-readme = "README.md"
+readme = "PYPI_README.md"
 requires-python = ">=3.9"
 dependencies = [
     "openai",
