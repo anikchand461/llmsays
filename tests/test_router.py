@@ -20,4 +20,4 @@ def test_get_category(sample_queries):
     assert get_category(sample_queries["extra_large"]) == "extra_large"
 
 def test_fallback_category():
-    assert get_category("Random query") == "medium"
+    assert get_category("Explain cloud service models") == "medium"

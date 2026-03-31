@@ -4,9 +4,14 @@ Router: Hybrid categorization for prompts.
 
 import re
 from functools import lru_cache
-from typing import Optional
-from semantic_router import Route, HybridRouteLayer
+from typing import Any, Optional
+from semantic_router import Route
 from semantic_router.encoders import HuggingFaceEncoder, BM25Encoder
+
+try:
+    from semantic_router import HybridRouteLayer as _HybridRouterClass
+except ImportError:
+    from semantic_router import HybridRouter as _HybridRouterClass
 
 routes = [
     Route(
@@ -37,22 +42,39 @@ routes = [
 
 
 @lru_cache(maxsize=1)
-def _get_router() -> HybridRouteLayer:
+def _get_router() -> Any:
     dense_encoder = HuggingFaceEncoder("sentence-transformers/paraphrase-MiniLM-L3-v2")
     sparse_encoder = BM25Encoder()
-    return HybridRouteLayer(
-        encoder=dense_encoder,
-        sparse_encoder=sparse_encoder,
-        routes=routes,
-        alpha=0.6,
-        aggregation="cosine",
-    )
+    kwargs = {
+        "encoder": dense_encoder,
+        "sparse_encoder": sparse_encoder,
+        "routes": routes,
+        "alpha": 0.6,
+        "aggregation": "cosine",
+    }
+
+    try:
+        return _HybridRouterClass(**kwargs)
+    except TypeError:
+        kwargs.pop("aggregation", None)
+        try:
+            return _HybridRouterClass(**kwargs)
+        except TypeError:
+            return _HybridRouterClass(routes=routes, encoder=dense_encoder, sparse_encoder=sparse_encoder)
 
 @lru_cache(maxsize=128)
 def _cached_route(query: str) -> str:
-    choice = _get_router()(query)
     threshold = 0.58 + 0.2 * (len(query.split()) > 70)
-    return choice.name if choice.similarity_score >= threshold else "medium"
+    try:
+        choice = _get_router()(query)
+        choice_name = getattr(choice, "name", None)
+        similarity = getattr(choice, "similarity_score", None)
+        if choice_name in {"small", "medium", "large", "extra_large"}:
+            if similarity is None or similarity >= threshold:
+                return choice_name
+    except Exception:
+        pass
+    return "medium"
 
 def heuristic_pre_filter(query: str) -> Optional[str]:
     tokens = len(query.split())
@@ -61,11 +83,17 @@ def heuristic_pre_filter(query: str) -> Optional[str]:
         r"(prove|derivation|theorem|architecture|multi-step|legal|contract|research|design)",
     )
     code_re = re.compile(r"(python|api|code|debug|sql|dataset|json)")
+    medium_re = re.compile(r"(explain|summarize|translate|compare|describe)")
+    extreme_re = re.compile(r"(full|deep|global|tradeoff|tradeoffs|comprehensive|end-to-end)")
 
-    if tokens < 10 and not heavy_re.search(q_lower) and not code_re.search(q_lower):
-        return "small"
+    if heavy_re.search(q_lower) and extreme_re.search(q_lower):
+        return "extra_large"
     if tokens > 120 or (tokens > 60 and heavy_re.search(q_lower)):
         return "extra_large"
+    if medium_re.search(q_lower):
+        return "medium"
+    if tokens < 10 and not heavy_re.search(q_lower) and not code_re.search(q_lower):
+        return "small"
     if heavy_re.search(q_lower) or (tokens > 35 and code_re.search(q_lower)):
         return "large"
     if tokens <= 35:

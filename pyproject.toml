@@ -6,7 +6,11 @@ build-backend = "setuptools.build_meta"
 name = "llmsays"
 version = "0.1.0"
 description = "One-line LLM queries with smart routing and provider failover"
-authors = [{name = "Your Name", email = "your@email.com"}]
+authors = [
+    { name = "Abhiraj Adhikary", email = "abhirajadhikary06@gmail.com" },
+    { name = "Anik Chand", email = "anikchand461@gmail.com" },
+    { name = "Rudra Bhowmick", email = "bhowmickrudra07@gmail.com" }
+]
 license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.9"
