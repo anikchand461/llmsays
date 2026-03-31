@@ -2,6 +2,12 @@
 
 One-line LLM calls with automatic prompt-tier routing and provider failover.
 
+Key capabilities now included:
+- Tier routing using `sentence-transformers/paraphrase-MiniLM-L3-v2`
+- Provider failover across Groq, NIM, OpenRouter, Fireworks, and Baseten
+- Latency-aware provider ordering based on observed response times
+- Optional multiprocessing-style parallel querying for fastest successful answer
+
 ## Usage
 
 ```python
@@ -66,6 +72,20 @@ Set at least one API key. Multiple keys enable automatic provider failover.
 ```bash
 llmsays "Explain transformers in simple terms"
 llmsays "Analyze this legal clause" --providers Groq Openrouter
+llmsays "Summarize this API contract" --use-multiprocessing
+```
+
+## Python API
+
+```python
+from llmsays import llmsays
+
+response = llmsays(
+	"Design a production-ready architecture",
+	provider_preference=["Groq", "Openrouter"],
+	use_multiprocessing=True,
+)
+print(response)
 ```
 
 ## Development

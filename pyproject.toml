@@ -5,13 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "llmsays"
 version = "0.1.0"
-description = "One-line LLM queries via OpenRouter"
+description = "One-line LLM queries with smart routing and provider failover"
 authors = [{name = "Your Name", email = "your@email.com"}]
 license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "openai>=1.40.0",
+    "openai",
+    "groq",
+    "openrouter",
+    "baseten",
+    "fireworks-ai",
     "semantic-router[hybrid]>=0.0.50",
     "sentence-transformers>=3.0.0"
 ]

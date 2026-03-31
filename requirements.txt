@@ -3,3 +3,8 @@ sentence-transformers
 huggingface-hub
 pytest
 openai
+groq
+openrouter
+baseten
+fireworks-ai
+twine
