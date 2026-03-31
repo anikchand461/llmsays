@@ -1,6 +1,12 @@
 # Installation
 
 1. `pip install llmsays`
-2. Get free API key from openrouter.ai/keys
-3. `export OPENROUTER_API_KEY=sk-or-...`
-4. Use CLI or import: from llmsays import llmsays
+2. Set at least one provider key (more keys enables failover):
+	- `export GROQ_API_KEY=...`
+	- `export OPENROUTER_API_KEY=...`
+	- `export NIVIDIA_API_KEY=...`  
+	- `export FIREWORKSAI_API_KEY=...`
+	- `export BASETEN_API_KEY=...`
+3. Use as a one-liner:
+	- `from llmsays import llmsays`
+	- `print(llmsays("Explain quantum tunneling in simple words"))`

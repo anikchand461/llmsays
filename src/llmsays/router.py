@@ -9,39 +9,76 @@ from semantic_router import Route, HybridRouteLayer
 from semantic_router.encoders import HuggingFaceEncoder, BM25Encoder
 
 routes = [
-    Route(name="simple", utterances=["What is 2+2?", "Hello", "Capital of France"], keywords=["basic", "hello", "what is"]),
-    Route(name="moderate", utterances=["Explain car engine", "Translate to Spanish", "Short Python sort"], keywords=["explain", "translate", "script"]),
-    Route(name="complex", utterances=["Solve differential equation", "Quantum entanglement math", "Analyze contract"], keywords=["solve", "equation", "analyze"]),
-    Route(name="creative", utterances=["Write poem ocean", "Funny robot dialogue", "App slogan"], keywords=["poem", "dialogue", "slogan"]),
-    Route(name="tool-use", utterances=["Python Fibonacci", "Weather API query", "JSON dataset analyze"], keywords=["python", "api", "data"])
+    Route(
+        name="small",
+        utterances=["What is 2+2?", "Hello", "Capital of France"],
+        keywords=["basic", "hello", "what is"],
+    ),
+    Route(
+        name="medium",
+        utterances=["Explain car engine", "Translate to Spanish", "Summarize this text"],
+        keywords=["explain", "translate", "summary"],
+    ),
+    Route(
+        name="large",
+        utterances=["Solve differential equation", "Analyze contract", "Design a database schema"],
+        keywords=["solve", "equation", "analyze", "design"],
+    ),
+    Route(
+        name="extra_large",
+        utterances=[
+            "Write a full production architecture with tradeoffs",
+            "Perform deep legal risk analysis",
+            "Create a multi-stage reasoning plan",
+        ],
+        keywords=["architecture", "risk", "multi-stage", "research"],
+    ),
 ]
 
-dense_encoder = HuggingFaceEncoder("sentence-transformers/paraphrase-MiniLM-L3-v2")
-sparse_encoder = BM25Encoder()
-router = HybridRouteLayer(encoder=dense_encoder, sparse_encoder=sparse_encoder, routes=routes, alpha=0.6, aggregation="cosine")
+
+@lru_cache(maxsize=1)
+def _get_router() -> HybridRouteLayer:
+    dense_encoder = HuggingFaceEncoder("sentence-transformers/paraphrase-MiniLM-L3-v2")
+    sparse_encoder = BM25Encoder()
+    return HybridRouteLayer(
+        encoder=dense_encoder,
+        sparse_encoder=sparse_encoder,
+        routes=routes,
+        alpha=0.6,
+        aggregation="cosine",
+    )
 
 @lru_cache(maxsize=128)
 def _cached_route(query: str) -> str:
-    choice = router(query)
-    threshold = 0.6 + 0.2 * (len(query.split()) > 50)
-    return choice.name if choice.similarity_score >= threshold else "moderate"
+    choice = _get_router()(query)
+    threshold = 0.58 + 0.2 * (len(query.split()) > 70)
+    return choice.name if choice.similarity_score >= threshold else "medium"
 
 def heuristic_pre_filter(query: str) -> Optional[str]:
     tokens = len(query.split())
     q_lower = query.lower()
-    complex_re = re.compile(r"(solve|explain|write|analyze|python|equation|poem|api)")
-    if tokens < 10 and not complex_re.search(q_lower):
-        return "simple"
-    if tokens > 100 and "math|code|analyze" in q_lower:
-        return "complex"
-    if any(kw in q_lower for kw in ["python", "api", "code"]):
-        return "tool-use"
-    if any(kw in q_lower for kw in ["poem", "story", "dialogue"]):
-        return "creative"
+    heavy_re = re.compile(
+        r"(prove|derivation|theorem|architecture|multi-step|legal|contract|research|design)",
+    )
+    code_re = re.compile(r"(python|api|code|debug|sql|dataset|json)")
+
+    if tokens < 10 and not heavy_re.search(q_lower) and not code_re.search(q_lower):
+        return "small"
+    if tokens > 120 or (tokens > 60 and heavy_re.search(q_lower)):
+        return "extra_large"
+    if heavy_re.search(q_lower) or (tokens > 35 and code_re.search(q_lower)):
+        return "large"
+    if tokens <= 35:
+        return "medium"
     return None
 
+def get_tier(query: str) -> str:
+    tier = heuristic_pre_filter(query)
+    if not tier:
+        tier = _cached_route(query)
+    return tier
+
+
 def get_category(query: str) -> str:
-    category = heuristic_pre_filter(query)
-    if not category:
-        category = _cached_route(query)
-    return category
+    """Backward-compatible alias for older integrations."""
+    return get_tier(query)
